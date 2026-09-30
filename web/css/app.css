@@ -196,6 +196,55 @@ table.ring th { color: var(--muted); font-weight: normal; background: #0d1b28; }
   margin: 2px 3px 0 0;
   color: var(--text);
 }
+.tag.bad { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
+.tag.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
+
+/* ---- 最小停用集审计 ---- */
+.audit-box {
+  margin-top: 10px;
+  border: 1px dashed var(--accent);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #0d1b28;
+}
+.audit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.audit-title { font-size: 13px; color: #9fd0ff; }
+.btn-audit { white-space: nowrap; }
+button.btn-audit:disabled { opacity: 0.6; cursor: default; border-color: var(--border); }
+.audit-note { margin: 6px 0 0; line-height: 1.7; }
+.audit-note.bad { color: var(--bad); }
+.audit-rejected {
+  color: var(--bad);
+  border: 1px solid var(--bad);
+  background: var(--bad-soft);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  margin: 0;
+}
+.audit-panel { margin-top: 8px; }
+.audit-tags { font-size: 12.5px; color: var(--muted); margin: 4px 0; line-height: 1.9; }
+.audit-tags-name { margin-right: 4px; }
+.audit-sub { margin: 10px 0 4px; font-size: 12.5px; color: var(--muted); }
+table.potentials td:nth-child(3) { color: var(--ok); }
+.audit-layer {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 6px;
+}
+.audit-layer-head { font-size: 12.5px; color: #9fd0ff; margin: 4px 0; }
+.audit-via, .audit-cands, .audit-feasible, .audit-feasible-set, .audit-stats {
+  line-height: 1.9;
+  margin: 4px 0;
+}
+.audit-feasible-set .tag { margin-right: 6px; }
+.audit-stats { color: var(--muted); margin-top: 8px; }
 
 .footer {
   padding: 10px 22px;

@@ -29,7 +29,8 @@ const READY_TIMEOUT_MS = 60_000;
 const DSParser = (await import('../web/js/parser.js')).default;
 const DSCable = (await import('../web/js/solver.js')).default;
 const { parseScript } = DSParser;
-const { solveAudit, deriveAt } = DSCable;
+const { solveAudit, deriveAt, minDisableAudit, liveEdgesAt } = DSCable;
+const { runPageFlow } = await import('./page-flow.mjs');
 
 let failures = 0;
 function check(name, cond, detail) {
@@ -105,6 +106,52 @@ if (parsed.ok) {
     cp3 && JSON.stringify(cp3.activeIds) === JSON.stringify(['r1', 'r2']));
   const d3 = cp3 && deriveAt(cp3, parsed.stations, 'A', 'C');
   check('检查点 3 重新推导 A→C = 3', d3 && d3.status === 'ok' && d3.value === 3n);
+
+  /* -- 最小停用集审计（内核）：原检查点结论不改写 -- */
+  const live = liveEdgesAt(parsed.ops, 2);
+  check('审计输入为检查点 2 当时活动的 r1、r2、r3',
+    JSON.stringify(live.map((e) => e.id)) === JSON.stringify(['r1', 'r2', 'r3']));
+  const audit = minDisableAudit(live, parsed.stations);
+  check('审计受理 3 条活动关系（≤ 18 上限）', audit.status === 'ok', audit.status);
+  check('最少停用 1 条（第 1 层首次可行）',
+    audit.solutionLevel === 1 && audit.disabled.length === 1);
+  check('同层可行停用集按关系标识升序决胜为 {r1}',
+    JSON.stringify(audit.disabled) === JSON.stringify(['r1']),
+    JSON.stringify(audit.disabled));
+  check('最终保留关系为 {r2, r3} 且势值满足全部保留读数', (() => {
+    if (JSON.stringify(audit.retained) !== JSON.stringify(['r2', 'r3'])) return false;
+    const w = new Map(audit.potentials.map((p) => [p.name, p.w]));
+    return w.get('C') - w.get('B') === -2n && w.get('C') - w.get('A') === 4n;
+  })());
+  const rootHit = audit.layers[0] && audit.layers[0].hits[0];
+  check('审计展示各层命中矛盾环：第 0 层为 r3 闭合（3 ≠ 4），候选含 r1/r2/r3',
+    rootHit && rootHit.closing.id === 'r3' &&
+    rootHit.derived === 3n && rootHit.conflict === 4n &&
+    JSON.stringify(rootHit.candidates) === JSON.stringify(['r1', 'r2', 'r3']),
+    rootHit && JSON.stringify(rootHit.candidates));
+  check('审计不枚举全部子集（8 个候选集实际仅评估 4 个）',
+    audit.stats.totalMasks === 8 && audit.stats.evaluated === 4,
+    JSON.stringify(audit.stats));
+  check('审计后原脚本结论保持：检查点 2 仍冲突且矛盾环为 r3',
+    results[1].feasible === false && results[1].conflict.id === 'r3');
+
+  // 超过 18 条活动关系上限被明确拒绝
+  const overEdges = Array.from({ length: 19 }, (_, i) => ({
+    id: `e${i}`, u: 'A', v: 'B', d: BigInt(i), line: i + 1,
+  }));
+  const rejected = minDisableAudit(overEdges, ['A', 'B']);
+  check('19 条活动关系被明确拒绝（too_many_active）',
+    rejected.status === 'rejected' && rejected.code === 'too_many_active' &&
+    rejected.activeCount === 19 && rejected.limit === 18,
+    JSON.stringify(rejected));
+}
+
+/* ---------- 阶段 1b：页面操作（示例审计 / 超限拒绝 / 旧结果失效） ---------- */
+section('阶段 1b：Compose 页面操作（最小停用集审计 / 上限拒绝 / 失效）');
+try {
+  await runPageFlow(check);
+} catch (e) {
+  check('页面操作流程整体执行', false, e.stack || e.message);
 }
 
 /* ---------- 阶段 2：代码测试 ---------- */

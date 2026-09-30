@@ -27,6 +27,8 @@
       <p class="hint">
         每行一条：<code>[标识:] A→B=5</code> 登记；<code>withdraw 标识</code> 撤回；
         <code>checkpoint</code> 为检查点；首行可选 <code>stations: A,B,C</code> 声明站点。
+        冲突检查点可发起<strong>最小停用集审计</strong>（仅受理活动关系 ≤ 18 条的检查点；
+        不改写脚本与原检查点结论）。
       </p>
       <textarea id="script" spellcheck="false" rows="22"></textarea>
       <div id="meter" class="meter" aria-live="polite"></div>
