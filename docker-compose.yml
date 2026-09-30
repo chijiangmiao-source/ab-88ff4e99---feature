@@ -1,0 +1,36 @@
+# 深海观测缆站间偏移校核台 — Compose 编排
+#
+# 宿主机端口可配置：WEB_PORT=9090 docker compose up
+# 一次性验收：docker compose build && docker compose run verify
+name: deepsea-cable
+
+services:
+  # 静态页面 + /healthz 健康状态
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    image: deepsea-cable-console:latest
+    ports:
+      # 宿主机端口由环境变量 WEB_PORT 配置，默认 8080；容器内固定 8080
+      - "${WEB_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  # 一次性验收服务：场景复现 + 代码测试 + 构建产物检查 + HTTP 冒烟，退出即结束
+  verify:
+    build:
+      context: .
+      dockerfile: Dockerfile.verify
+    image: deepsea-cable-verify:latest
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      # 容器网络内冒烟
+      WEB_BASE_URL: "http://web:8080"
+      # 宿主机映射端口冒烟（验证“可配置宿主机端口”确实对外提供服务）
+      WEB_PUBLISHED_URL: "http://host.docker.internal:${WEB_PORT:-8080}"
+    extra_hosts:
+      # Linux 下解析 host.docker.internal
+      - "host.docker.internal:host-gateway"
+    restart: "no"

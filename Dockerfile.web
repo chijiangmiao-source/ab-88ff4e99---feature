@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1
+# 阶段 1：Node 构建静态产物并生成校验清单
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY web ./web
+COPY tools ./tools
+RUN node tools/build.mjs
+
+# 阶段 2：nginx 提供静态页面与健康状态
+FROM nginx:1.27-alpine
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=3s --start-period=3s --retries=6 \
+  CMD wget -qO- http://127.0.0.1:8080/healthz | grep -q '"status":"ok"' || exit 1

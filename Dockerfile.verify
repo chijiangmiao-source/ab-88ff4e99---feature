@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1
+# 一次性验收服务：复现场景 + 测试 + 构建产物检查 + HTTP 冒烟后退出
+FROM node:20-alpine
+WORKDIR /app
+COPY web ./web
+COPY tools ./tools
+COPY test ./test
+COPY verify ./verify
+RUN chmod +x verify/verify-entrypoint.sh
+ENTRYPOINT ["/app/verify/verify-entrypoint.sh"]

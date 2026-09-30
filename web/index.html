@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>深海观测缆 · 站间偏移校核台</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>深海观测缆 · 站间偏移校核台</h1>
+    <div class="limits">
+      站点 ≤ <strong>64</strong> 个 · 脚本 ≤ <strong>180</strong> 行 ·
+      整数范围 ±9007199254740991
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="pane pane-input">
+      <div class="pane-head">
+        <h2>检修脚本</h2>
+        <div class="btn-row">
+          <button id="btn-example" type="button">载入示例</button>
+          <button id="btn-run" type="button" class="primary">校核检查点</button>
+        </div>
+      </div>
+      <p class="hint">
+        每行一条：<code>[标识:] A→B=5</code> 登记；<code>withdraw 标识</code> 撤回；
+        <code>checkpoint</code> 为检查点；首行可选 <code>stations: A,B,C</code> 声明站点。
+      </p>
+      <textarea id="script" spellcheck="false" rows="22"></textarea>
+      <div id="meter" class="meter" aria-live="polite"></div>
+    </section>
+
+    <section class="pane pane-output">
+      <div class="pane-head">
+        <h2>审计结论</h2>
+        <span id="stale-note" class="stale-note" hidden>脚本已修改，以下为旧审计结果，重新校核后刷新</span>
+      </div>
+      <div id="errors" class="errors" hidden></div>
+      <div id="results" class="results"></div>
+      <div id="empty-hint" class="empty-hint">在左侧编写脚本并点击「校核检查点」，结论将按检查点依次列出。</div>
+    </section>
+  </main>
+
+  <template id="tpl-result">
+    <article class="card cp-card">
+      <header class="card-head">
+        <span class="cp-title"></span>
+        <span class="badge"></span>
+      </header>
+      <div class="card-body"></div>
+    </article>
+  </template>
+
+  <footer class="footer">
+    后台算法：时间区间分治（线段树）+ 可回滚带势并查集，按检查点区间复用关系，不重扫活动集合。
+  </footer>
+
+  <script src="js/solver.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
